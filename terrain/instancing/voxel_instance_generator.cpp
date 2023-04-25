@@ -251,7 +251,15 @@ void VoxelInstanceGenerator::generate_transforms(std::vector<Transform3f> &out_t
 			case DIMENSION_2D: {
 				for (size_t i = 0; i < vertex_cache.size(); ++i) {
 					const Vector3 &pos = to_vec3(vertex_cache[i]) + mesh_block_origin_d;
-					const float n = _noise->get_noise_2d(pos.x, pos.z);
+					float n = 0;
+					if (get_noise2d_override.is_valid()) {
+						Array args = Array();
+						args[0] = pos.x;
+						args[1] = pos.y;
+						n = get_noise2d_override.callv(args);
+					} else
+						n = _noise->get_noise_2d(pos.x, pos.z);
+
 					if (n < 0) {
 						unordered_remove(vertex_cache, i);
 						unordered_remove(normal_cache, i);
@@ -718,6 +726,9 @@ void VoxelInstanceGenerator::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_noise_on_scale", "amount"), &VoxelInstanceGenerator::set_noise_on_scale);
 	ClassDB::bind_method(D_METHOD("get_noise_on_scale"), &VoxelInstanceGenerator::get_noise_on_scale);
+
+	ClassDB::bind_method(
+			D_METHOD("set_get_noise2d_override", "callable"), &VoxelInstanceGenerator::set_get_noise2d_override);
 
 #ifdef ZN_GODOT_EXTENSION
 	ClassDB::bind_method(D_METHOD("_on_noise_changed"), &VoxelInstanceGenerator::_on_noise_changed);

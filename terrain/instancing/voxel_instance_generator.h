@@ -1,10 +1,13 @@
 #ifndef VOXEL_INSTANCE_GENERATOR_H
 #define VOXEL_INSTANCE_GENERATOR_H
 
-//#include "../../storage/voxel_buffer.h"
+// #include "../../storage/voxel_buffer.h"
 #include "../../util/godot/classes/noise.h"
 #include "../../util/math/transform3f.h"
 #include "../../util/math/vector3i.h"
+
+// would break extensions
+#include "core/variant/callable.h"
 
 #include <limits>
 #include <vector>
@@ -122,6 +125,10 @@ public:
 		return int(x) | (int(y) << 1) | (int(z) << 2);
 	}
 
+	inline void set_get_noise2d_override(Callable get_noise2d) {
+		get_noise2d_override = get_noise2d;
+	}
+
 private:
 	void _on_noise_changed();
 
@@ -147,6 +154,8 @@ private:
 	// Stored separately for editor
 	float _min_slope_degrees = 0.f;
 	float _max_slope_degrees = 180.f;
+
+	Callable get_noise2d_override;
 };
 
 } // namespace zylann::voxel
