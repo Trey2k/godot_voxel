@@ -56,7 +56,7 @@ int VoxelInstanceLibrary::find_item_by_name(String name) const {
 	for (auto it = _items.begin(); it != _items.end(); ++it) {
 		const Ref<VoxelInstanceLibraryItem> &item = it->second;
 		ERR_FAIL_COND_V(item.is_null(), -1);
-		if (item->get_name() == name) {
+		if (item->get_item_name() == name) {
 			return it->first;
 		}
 	}
@@ -172,12 +172,26 @@ void VoxelInstanceLibrary::_get_property_list(List<PropertyInfo> *p_list) const 
 	}
 }
 
+PackedInt32Array VoxelInstanceLibrary::_b_get_all_item_ids() const {
+	PackedInt32Array ids;
+	ids.resize(_items.size());
+	// Doing this because in GDExtension builds assigning items has different syntax than modules... and it's faster
+	int *ids_w = ids.ptrw();
+	int i = 0;
+	for (auto it = _items.begin(); it != _items.end(); ++it) {
+		ids_w[i] = it->first;
+		++i;
+	}
+	return ids;
+}
+
 void VoxelInstanceLibrary::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_item", "id", "item"), &VoxelInstanceLibrary::add_item);
 	ClassDB::bind_method(D_METHOD("remove_item", "id"), &VoxelInstanceLibrary::remove_item);
 	ClassDB::bind_method(D_METHOD("clear"), &VoxelInstanceLibrary::clear);
 	ClassDB::bind_method(D_METHOD("find_item_by_name", "name"), &VoxelInstanceLibrary::find_item_by_name);
 	ClassDB::bind_method(D_METHOD("get_item", "id"), &VoxelInstanceLibrary::_b_get_item);
+	ClassDB::bind_method(D_METHOD("get_all_item_ids"), &VoxelInstanceLibrary::_b_get_all_item_ids);
 
 	BIND_CONSTANT(MAX_ID);
 }
