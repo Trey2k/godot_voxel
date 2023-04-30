@@ -254,8 +254,8 @@ void VoxelInstanceGenerator::generate_transforms(std::vector<Transform3f> &out_t
 					float n = 0;
 					if (get_noise2d_override.is_valid()) {
 						Array args;
+						args.push_back(pos.z);
 						args.push_back(pos.x);
-						args.push_back(pos.y);
 						n = get_noise2d_override.callv(args);
 					} else
 						n = _noise->get_noise_2d(pos.x, pos.z);
