@@ -235,8 +235,8 @@ void VoxelLodTerrain::set_stream(Ref<VoxelStream> p_stream) {
 #ifdef TOOLS_ENABLED
 	if (p_stream.is_valid()) {
 		if (Engine::get_singleton()->is_editor_hint()) {
-			Ref<Script> script = p_stream->get_script();
-			if (script.is_valid()) {
+			Ref<Script> stream_script = p_stream->get_script();
+			if (stream_script.is_valid()) {
 				// Safety check. It's too easy to break threads by making a script reload.
 				// You can turn it back on, but be careful.
 				_update_data->settings.run_stream_in_editor = false;
@@ -266,8 +266,8 @@ void VoxelLodTerrain::set_generator(Ref<VoxelGenerator> p_generator) {
 #ifdef TOOLS_ENABLED
 	if (p_generator.is_valid()) {
 		if (Engine::get_singleton()->is_editor_hint()) {
-			Ref<Script> script = p_generator->get_script();
-			if (script.is_valid()) {
+			Ref<Script> generator_script = p_generator->get_script();
+			if (generator_script.is_valid()) {
 				// Safety check. It's too easy to break threads by making a script reload.
 				// You can turn it back on, but be careful.
 				_update_data->settings.run_stream_in_editor = false;
@@ -361,7 +361,7 @@ void VoxelLodTerrain::_on_stream_params_changed() {
 
 	reset_maps();
 	// TODO Size other than 16 is not really supported though.
-	// also this code isn't right, it doesnt update the other lods
+	// also this code isn't right, it doesn't update the other lods
 	//_data->lods[0].map.create(p_block_size_po2, 0);
 
 	Ref<VoxelGenerator> generator = get_generator();
@@ -595,7 +595,7 @@ void VoxelLodTerrain::set_view_distance(int p_distance_in_voxels) {
 void VoxelLodTerrain::start_updater() {
 	Ref<VoxelMesherBlocky> blocky_mesher = _mesher;
 	if (blocky_mesher.is_valid()) {
-		Ref<VoxelBlockyLibrary> library = blocky_mesher->get_library();
+		Ref<VoxelBlockyLibraryBase> library = blocky_mesher->get_library();
 		if (library.is_valid()) {
 			// TODO Any way to execute this function just after the TRES resource loader has finished to load?
 			// VoxelLibrary should be baked ahead of time, like MeshLibrary
@@ -1083,7 +1083,8 @@ void VoxelLodTerrain::process(float delta) {
 			VoxelEngine::get_singleton().push_async_task(task);
 
 		} else {
-			task->run(ThreadedTaskContext{ 0 });
+			ThreadedTaskContext ctx{ 0, false };
+			task->run(ctx);
 			memdelete(task);
 			apply_main_thread_update_tasks();
 		}
@@ -1207,7 +1208,7 @@ void VoxelLodTerrain::apply_main_thread_update_tasks() {
 					const Vector3 block_center = volume_transform.xform(
 							to_vec3(block->position * mesh_block_size + Vector3iUtil::create(mesh_block_size / 2)));
 
-					// Dont do fading for blocks behind the camera
+					// Don't do fading for blocks behind the camera.
 					if (camera.forward.dot(block_center - camera.position) > 0.f) {
 						FadingOutMesh item;
 
@@ -1286,7 +1287,7 @@ void VoxelLodTerrain::apply_data_block_response(VoxelEngine::BlockDataOutput &ob
 	if (ob.type == VoxelEngine::BlockDataOutput::TYPE_SAVED) {
 		// That's a save confirmation event.
 		// Note: in the future, if blocks don't get copied before being sent for saving,
-		// we will need to use block versionning to know when we can reset the `modified` flag properly
+		// we will need to use block versioning to know when we can reset the `modified` flag properly
 
 		// TODO Now that's the case. Use version? Or just keep copying?
 		return;
@@ -1895,7 +1896,7 @@ void VoxelLodTerrain::set_instancer(VoxelInstancer *instancer) {
 	_instancer = instancer;
 }
 
-// This function is primarily intented for editor use cases at the moment.
+// This function is primarily intended for editor use cases at the moment.
 // It will be slower than using the instancing generation events,
 // because it has to query VisualServer, which then allocates and decodes vertex buffers (assuming they are cached).
 Array VoxelLodTerrain::get_mesh_block_surface(Vector3i block_pos, int lod_index) const {
@@ -2562,7 +2563,7 @@ void VoxelLodTerrain::update_gizmos() {
 			const Vector3i block_offset_lod0 = block_pos_maxlod << (lod_count - 1);
 
 			octree.for_each_leaf([&dr, block_offset_lod0, mesh_block_size, parent_transform, lod_count_f](
-										 Vector3i node_pos, int lod_index, const LodOctree::NodeData &data) {
+										 Vector3i node_pos, int lod_index, const LodOctree::NodeData &node_data) {
 				//
 				const int size = mesh_block_size << lod_index;
 				const Vector3i voxel_pos = mesh_block_size * ((node_pos << lod_index) + block_offset_lod0);
@@ -2646,7 +2647,7 @@ Array VoxelLodTerrain::_b_debug_print_sdf_top_down(Vector3i center, Vector3i ext
 
 	Array image_array;
 	const unsigned int lod_count = get_lod_count();
-	const VoxelData &data = *_data;
+	const VoxelData &voxel_data = *_data;
 
 	for (unsigned int lod_index = 0; lod_index < lod_count; ++lod_index) {
 		const Box3i world_box = Box3i::from_center_extents(center >> lod_index, extents >> lod_index);
@@ -2658,11 +2659,11 @@ Array VoxelLodTerrain::_b_debug_print_sdf_top_down(Vector3i center, Vector3i ext
 		VoxelBufferInternal buffer;
 		buffer.create(world_box.size);
 
-		world_box.for_each_cell([world_box, &buffer, &data](const Vector3i &world_pos) {
+		world_box.for_each_cell([world_box, &buffer, &voxel_data](const Vector3i &world_pos) {
 			const Vector3i rpos = world_pos - world_box.pos;
 			VoxelSingleValue v;
 			v.f = 1.f;
-			v = data.get_voxel(world_pos, VoxelBufferInternal::CHANNEL_SDF, v);
+			v = voxel_data.get_voxel(world_pos, VoxelBufferInternal::CHANNEL_SDF, v);
 			buffer.set_voxel_f(v.f, rpos.x, rpos.y, rpos.z, VoxelBufferInternal::CHANNEL_SDF);
 		});
 

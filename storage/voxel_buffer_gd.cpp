@@ -186,9 +186,9 @@ void VoxelBuffer::for_each_voxel_metadata(const Callable &callback) const {
 	ERR_FAIL_COND(callback.is_null());
 	//_buffer->for_each_voxel_metadata(callback);
 
-	const FlatMapMoveOnly<Vector3i, VoxelMetadata> &metadata = _buffer->get_voxel_metadata();
+	const FlatMapMoveOnly<Vector3i, VoxelMetadata> &metadata_map = _buffer->get_voxel_metadata();
 
-	for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+	for (auto it = metadata_map.begin(); it != metadata_map.end(); ++it) {
 		Variant v = get_as_variant(it->value);
 
 #if defined(ZN_GODOT)
@@ -377,7 +377,7 @@ void VoxelBuffer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("optimize"), &VoxelBuffer::_b_deprecated_optimize);
 	ClassDB::bind_method(D_METHOD("compress_uniform_channels"), &VoxelBuffer::compress_uniform_channels);
 	ClassDB::bind_method(D_METHOD("get_channel_compression", "channel"), &VoxelBuffer::get_channel_compression);
-	ClassDB::bind_method(D_METHOD("remap_values", "channel"), &VoxelBuffer::remap_values);
+	ClassDB::bind_method(D_METHOD("remap_values", "channel", "map"), &VoxelBuffer::remap_values);
 
 	ClassDB::bind_method(D_METHOD("get_block_metadata"), &VoxelBuffer::get_block_metadata);
 	ClassDB::bind_method(D_METHOD("set_block_metadata", "meta"), &VoxelBuffer::set_block_metadata);

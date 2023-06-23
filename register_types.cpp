@@ -19,7 +19,15 @@
 #include "generators/simple/voxel_generator_noise_2d.h"
 #include "generators/simple/voxel_generator_waves.h"
 #include "generators/voxel_generator_script.h"
+#include "meshers/blocky/types/voxel_blocky_attribute_axis.h"
+#include "meshers/blocky/types/voxel_blocky_attribute_custom.h"
+#include "meshers/blocky/types/voxel_blocky_attribute_direction.h"
+#include "meshers/blocky/types/voxel_blocky_attribute_rotation.h"
+#include "meshers/blocky/types/voxel_blocky_type_library.h"
 #include "meshers/blocky/voxel_blocky_library.h"
+#include "meshers/blocky/voxel_blocky_model_cube.h"
+#include "meshers/blocky/voxel_blocky_model_empty.h"
+#include "meshers/blocky/voxel_blocky_model_mesh.h"
 #include "meshers/blocky/voxel_mesher_blocky.h"
 #include "meshers/cubes/voxel_mesher_cubes.h"
 #include "meshers/dmc/voxel_mesher_dmc.h"
@@ -71,10 +79,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef TOOLS_ENABLED
 
-#ifdef ZN_GODOT
-#include "editor/editor_plugin.h"
-#endif
+#include "editor/blocky_library/voxel_blocky_library_editor_plugin.h"
 #include "editor/fast_noise_lite/fast_noise_lite_editor_plugin.h"
+#include "editor/graph/graph_nodes_doc_tool.h"
 #include "editor/graph/voxel_graph_editor_node_preview.h"
 #include "editor/graph/voxel_graph_editor_plugin.h"
 #include "editor/instance_library/voxel_instance_library_editor_plugin.h"
@@ -84,6 +91,7 @@
 #include "editor/terrain/voxel_terrain_editor_plugin.h"
 #include "editor/vox/vox_editor_plugin.h"
 #include "editor/voxel_debug.h"
+#include "util/godot/classes/os.h"
 
 #ifdef VOXEL_ENABLE_FAST_NOISE_2
 #include "editor/fast_noise_2/fast_noise_2_editor_plugin.h"
@@ -203,8 +211,24 @@ void initialize_voxel_module(ModuleInitializationLevel p_level) {
 		ClassDB::register_class<gd::VoxelEngine>();
 
 		// Misc
+
+		// Should be abstract, but isn't for compatibility with old versions that didn't have separate VoxelBlockyModel
+		// classes
 		ClassDB::register_class<VoxelBlockyModel>();
+
+		ClassDB::register_class<VoxelBlockyModelCube>();
+		ClassDB::register_class<VoxelBlockyModelMesh>();
+		ClassDB::register_class<VoxelBlockyModelEmpty>();
+		register_abstract_class<VoxelBlockyLibraryBase>();
 		ClassDB::register_class<VoxelBlockyLibrary>();
+		register_abstract_class<VoxelBlockyAttribute>();
+		ClassDB::register_class<VoxelBlockyAttributeAxis>();
+		ClassDB::register_class<VoxelBlockyAttributeDirection>();
+		ClassDB::register_class<VoxelBlockyAttributeRotation>();
+		ClassDB::register_class<VoxelBlockyAttributeCustom>();
+		ClassDB::register_class<VoxelBlockyType>();
+		ClassDB::register_class<VoxelBlockyTypeLibrary>();
+
 		ClassDB::register_class<VoxelColorPalette>();
 		ClassDB::register_class<VoxelInstanceLibrary>();
 		register_abstract_class<VoxelInstanceLibraryItem>();
@@ -292,8 +316,8 @@ void initialize_voxel_module(ModuleInitializationLevel p_level) {
 
 #ifdef ZN_GODOT
 		// Compatibility with older version
-		ClassDB::add_compatibility_class("VoxelLibrary", "VoxelBlockyLibrary");
-		ClassDB::add_compatibility_class("Voxel", "VoxelBlockyModel");
+		// ClassDB::add_compatibility_class("VoxelLibrary", "VoxelBlockyLibrary");
+		// ClassDB::add_compatibility_class("Voxel", "VoxelBlockyModel");
 		ClassDB::add_compatibility_class("VoxelInstanceLibraryItem", "VoxelInstanceLibraryMultiMeshItem");
 		// Not possible to add a compat class for this one because the new name is indistinguishable from an old one.
 		// However this is an abstract class so it should not be found in resources hopefully
@@ -309,20 +333,7 @@ void initialize_voxel_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR) {
 		VoxelGraphEditorNodePreview::load_resources();
 
-#if defined(ZN_GODOT)
-		EditorPlugins::add_by_type<VoxelGraphEditorPlugin>();
-		EditorPlugins::add_by_type<VoxelTerrainEditorPlugin>();
-		EditorPlugins::add_by_type<VoxelInstanceLibraryEditorPlugin>();
-		EditorPlugins::add_by_type<VoxelInstanceLibraryMultiMeshItemEditorPlugin>();
-		EditorPlugins::add_by_type<ZN_FastNoiseLiteEditorPlugin>();
-		EditorPlugins::add_by_type<magica::VoxelVoxEditorPlugin>();
-		EditorPlugins::add_by_type<VoxelInstancerEditorPlugin>();
-		EditorPlugins::add_by_type<VoxelMeshSDFEditorPlugin>();
-#ifdef VOXEL_ENABLE_FAST_NOISE_2
-		EditorPlugins::add_by_type<FastNoise2EditorPlugin>();
-#endif
-
-#elif defined(ZN_GODOT_EXTENSION)
+#if defined(ZN_GODOT_EXTENSION)
 		// TODO GDX: Can't add plugins.
 		// See https://github.com/godotengine/godot-cpp/issues/640
 		// and https://github.com/godotengine/godot/pull/65592
@@ -370,7 +381,43 @@ void initialize_voxel_module(ModuleInitializationLevel p_level) {
 		ClassDB::register_class<VoxelGraphEditorShaderDialog>();
 		ClassDB::register_class<VoxelGraphEditorIODialog>();
 		ClassDB::register_class<VoxelGraphNodeInspectorWrapper>();
+		ClassDB::register_class<VoxelGraphNodeDialog>();
 		ClassDB::register_class<VoxelRangeAnalysisDialog>();
+#endif
+
+		EditorPlugins::add_by_type<VoxelGraphEditorPlugin>();
+		EditorPlugins::add_by_type<VoxelTerrainEditorPlugin>();
+		EditorPlugins::add_by_type<VoxelInstanceLibraryEditorPlugin>();
+		EditorPlugins::add_by_type<VoxelInstanceLibraryMultiMeshItemEditorPlugin>();
+		EditorPlugins::add_by_type<ZN_FastNoiseLiteEditorPlugin>();
+		EditorPlugins::add_by_type<magica::VoxelVoxEditorPlugin>();
+		EditorPlugins::add_by_type<VoxelInstancerEditorPlugin>();
+		EditorPlugins::add_by_type<VoxelMeshSDFEditorPlugin>();
+		EditorPlugins::add_by_type<VoxelBlockyLibraryEditorPlugin>();
+#ifdef VOXEL_ENABLE_FAST_NOISE_2
+		EditorPlugins::add_by_type<FastNoise2EditorPlugin>();
+#endif
+
+#ifdef TOOLS_ENABLED
+		// TODO Any way to define a custom command line argument that closes Godot afterward?
+
+		const PackedStringArray command_line_arguments = get_command_line_arguments();
+		const String doc_tool_cmd = "--voxel_doc_tool";
+
+		for (int i = 0; i < command_line_arguments.size(); ++i) {
+			const String arg = command_line_arguments[i];
+			if (arg == doc_tool_cmd) {
+				if (i + 2 >= command_line_arguments.size()) {
+					ERR_PRINT(String("Expected source and destination file paths after {0}").format(varray(arg)));
+					break;
+				}
+				const String src_path = command_line_arguments[i + 1];
+				const String dst_path = command_line_arguments[i + 2];
+				run_graph_nodes_doc_tool(src_path, dst_path);
+				break;
+			}
+		}
+// run_graph_nodes_doc_tool
 #endif
 	}
 #endif // TOOLS_ENABLED
@@ -403,7 +450,7 @@ void uninitialize_voxel_module(ModuleInitializationLevel p_level) {
 		zylann::free_debug_resources();
 		VoxelGraphEditorNodePreview::unload_resources();
 
-		// TODO GDX: Can't remove plugins.
+		// Plugins are automatically unregistered since https://github.com/godotengine/godot-cpp/pull/1138
 	}
 #endif // TOOLS_ENABLED
 }
@@ -411,9 +458,9 @@ void uninitialize_voxel_module(ModuleInitializationLevel p_level) {
 #ifdef ZN_GODOT_EXTENSION
 extern "C" {
 // Library entry point
-GDExtensionBool GDE_EXPORT voxel_library_init(const GDExtensionInterface *p_interface,
-		const GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) {
-	godot::GDExtensionBinding::InitObject init_obj(p_interface, p_library, r_initialization);
+GDExtensionBool GDE_EXPORT voxel_library_init(GDExtensionInterfaceGetProcAddress p_get_proc_address,
+		GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) {
+	godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
 	init_obj.register_initializer(initialize_voxel_module);
 	init_obj.register_terminator(uninitialize_voxel_module);
