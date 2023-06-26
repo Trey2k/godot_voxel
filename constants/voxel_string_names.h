@@ -65,6 +65,8 @@ public:
 	StringName ExternalLink;
 	StringName Search;
 	StringName source;
+	StringName _dummy_function;
+	StringName grab_focus;
 #endif
 
 	StringName _rpc_receive_blocks;

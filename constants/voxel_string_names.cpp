@@ -70,6 +70,8 @@ VoxelStringNames::VoxelStringNames() {
 	ExternalLink = StringName("ExternalLink");
 	Search = StringName("Search");
 	source = StringName("source");
+	_dummy_function = StringName("_dummy_function");
+	grab_focus = StringName("grab_focus");
 #endif
 
 	_rpc_receive_blocks = StringName("_rpc_receive_blocks");
