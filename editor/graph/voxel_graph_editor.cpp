@@ -7,6 +7,7 @@
 #include "../../util/godot/classes/canvas_item.h"
 #include "../../util/godot/classes/check_box.h"
 #include "../../util/godot/classes/control.h"
+#include "../../util/godot/classes/display_server.h"
 #include "../../util/godot/classes/editor_file_dialog.h"
 #include "../../util/godot/classes/editor_quick_open.h"
 #include "../../util/godot/classes/graph_edit.h"
@@ -1380,7 +1381,6 @@ void VoxelGraphEditor::_bind_methods() {
 	ClassDB::bind_method(
 			D_METHOD("_on_graph_node_dragged", "from", "to", "id"), &VoxelGraphEditor::_on_graph_node_dragged);
 	ClassDB::bind_method(D_METHOD("_on_menu_id_pressed", "id"), &VoxelGraphEditor::_on_menu_id_pressed);
-	ClassDB::bind_method(D_METHOD("_on_context_menu_id_pressed", "id"), &VoxelGraphEditor::_on_context_menu_id_pressed);
 	ClassDB::bind_method(D_METHOD("_on_graph_changed"), &VoxelGraphEditor::_on_graph_changed);
 	ClassDB::bind_method(
 			D_METHOD("_on_graph_node_name_changed", "node_id"), &VoxelGraphEditor::_on_graph_node_name_changed);
@@ -1389,16 +1389,14 @@ void VoxelGraphEditor::_bind_methods() {
 	ClassDB::bind_method(
 			D_METHOD("_on_range_analysis_area_changed"), &VoxelGraphEditor::_on_range_analysis_area_changed);
 	ClassDB::bind_method(D_METHOD("_on_popout_button_pressed"), &VoxelGraphEditor::_on_popout_button_pressed);
-	ClassDB::bind_method(D_METHOD("_on_function_file_dialog_file_selected", "fpath"),
-			&VoxelGraphEditor::_on_function_file_dialog_file_selected);
-#if ZN_GODOT
-	ClassDB::bind_method(D_METHOD("_on_function_quick_open_dialog_quick_open"),
-			&VoxelGraphEditor::_on_function_quick_open_dialog_quick_open);
-#endif
 	ClassDB::bind_method(
 			D_METHOD("_on_node_resize_request", "new_size", "node_id"), &VoxelGraphEditor::_on_node_resize_request);
 	ClassDB::bind_method(
 			D_METHOD("_on_graph_node_preview_gui_input", "event"), &VoxelGraphEditor::_on_graph_node_preview_gui_input);
+	ClassDB::bind_method(
+			D_METHOD("_on_node_dialog_node_selected", "id"), &VoxelGraphEditor::_on_node_dialog_node_selected);
+	ClassDB::bind_method(
+			D_METHOD("_on_node_dialog_file_selected", "fpath"), &VoxelGraphEditor::_on_node_dialog_file_selected);
 #endif
 
 	ClassDB::bind_method(D_METHOD("_check_nothing_selected"), &VoxelGraphEditor::_check_nothing_selected);

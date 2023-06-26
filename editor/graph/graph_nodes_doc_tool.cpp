@@ -1,6 +1,8 @@
 #include "../../generators/graph/node_type_db.h"
 #include "../../util/errors.h"
+#include "../../util/godot/classes/file_access.h"
 #include "../../util/godot/classes/xml_parser.h"
+#include "../../util/godot/core/array.h"
 #include <unordered_map>
 #include <vector>
 
@@ -193,8 +195,8 @@ void write_graph_nodes_doc_xml(
 			{
 				// Doing this so the code is the same with GDExtension...
 				String *lines_p = lines.ptrw();
-				for (int i = 0; i < lines.size(); ++i) {
-					String s = lines[i];
+				for (int line_index = 0; line_index < lines.size(); ++line_index) {
+					String s = lines[line_index];
 
 					String indent;
 					const int indent_level = get_indent_level(s);
@@ -202,7 +204,7 @@ void write_graph_nodes_doc_xml(
 						indent += "\t";
 					}
 
-					lines_p[i] = indent + s.strip_edges();
+					lines_p[line_index] = indent + s.strip_edges();
 				}
 			}
 

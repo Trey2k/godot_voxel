@@ -1,7 +1,11 @@
 #include "voxel_graph_node_dialog.h"
+#include "../../constants/voxel_string_names.h"
 #include "../../generators/graph/node_type_db.h"
+#include "../../util/godot/classes/button.h"
 #include "../../util/godot/classes/editor_file_dialog.h"
 #include "../../util/godot/classes/editor_quick_open.h"
+#include "../../util/godot/classes/font.h"
+#include "../../util/godot/classes/input_event_key.h"
 #include "../../util/godot/classes/label.h"
 #include "../../util/godot/classes/line_edit.h"
 #include "../../util/godot/classes/object.h"
@@ -9,6 +13,7 @@
 #include "../../util/godot/classes/tree.h"
 #include "../../util/godot/classes/v_box_container.h"
 #include "../../util/godot/classes/v_split_container.h"
+#include "../../util/godot/core/array.h"
 #include "../../util/godot/core/callable.h"
 #include "../../util/godot/core/keyboard.h"
 #include "../../util/godot/core/string.h"
@@ -20,7 +25,7 @@
 namespace zylann::voxel {
 
 static const GraphNodesDocData::Node *get_graph_node_documentation(String name) {
-	for (int i = 0; i < GraphNodesDocData::COUNT; ++i) {
+	for (unsigned int i = 0; i < GraphNodesDocData::COUNT; ++i) {
 		const GraphNodesDocData::Node &node = GraphNodesDocData::g_data[i];
 		if (node.name == name) {
 			return &node;
@@ -29,9 +34,9 @@ static const GraphNodesDocData::Node *get_graph_node_documentation(String name) 
 	return nullptr;
 }
 
-static const void get_graph_node_documentation_category_names(std::vector<String> &out_category_names) {
+static void get_graph_node_documentation_category_names(std::vector<String> &out_category_names) {
 	std::unordered_set<String> categories;
-	for (int i = 0; i < GraphNodesDocData::COUNT; ++i) {
+	for (unsigned int i = 0; i < GraphNodesDocData::COUNT; ++i) {
 		const GraphNodesDocData::Node &node = GraphNodesDocData::g_data[i];
 		if (categories.insert(node.category).second) {
 			out_category_names.push_back(node.category);
@@ -124,8 +129,8 @@ VoxelGraphNodeDialog::VoxelGraphNodeDialog() {
 	// TODO Usability: have CustomInput and CustomOutput subcategories based on I/O definitions, + a "new" option for
 	// unbound
 	const pg::NodeTypeDB &type_db = pg::NodeTypeDB::get_singleton();
-	for (int i = 0; i < type_db.get_type_count(); ++i) {
-		const pg::NodeType &type = type_db.get_type(i);
+	for (int type_index = 0; type_index < type_db.get_type_count(); ++type_index) {
+		const pg::NodeType &type = type_db.get_type(type_index);
 
 		int category_index = -1;
 		String description;
@@ -141,7 +146,7 @@ VoxelGraphNodeDialog::VoxelGraphNodeDialog() {
 			description = doc->description;
 		}
 
-		if (i == pg::VoxelGraphFunction::NODE_FUNCTION) {
+		if (type_index == pg::VoxelGraphFunction::NODE_FUNCTION) {
 			{
 				Item item;
 				item.name = ZN_TTR("Browse Custom Function...");
@@ -164,13 +169,13 @@ VoxelGraphNodeDialog::VoxelGraphNodeDialog() {
 			continue;
 		}
 
-		const pg::NodeType &node_type = pg::NodeTypeDB::get_singleton().get_type(i);
+		const pg::NodeType &node_type = pg::NodeTypeDB::get_singleton().get_type(type_index);
 
 		Item item;
 		item.name = ZN_TTR(node_type.name);
 		item.category = category_index;
 		item.description = description;
-		item.id = i;
+		item.id = type_index;
 		_items.push_back(item);
 	}
 
@@ -388,18 +393,16 @@ void VoxelGraphNodeDialog::_on_function_file_dialog_file_selected(String fpath) 
 	hide();
 }
 
-#ifdef ZN_GODOT
-
 void VoxelGraphNodeDialog::_on_function_quick_open_dialog_quick_open() {
+#ifdef ZN_GODOT
 	String fpath = _function_quick_open_dialog->get_selected();
 	if (fpath.is_empty()) {
 		return;
 	}
 	emit_signal(SIGNAL_FILE_SELECTED, fpath);
 	hide();
-}
-
 #endif
+}
 
 void VoxelGraphNodeDialog::_on_description_label_meta_clicked(Variant meta) {
 	// TODO Open docs if a class name is clicked
@@ -410,9 +413,10 @@ void VoxelGraphNodeDialog::_notification(int p_what) {
 		_filter_line_edit->set_clear_button_enabled(true);
 
 	} else if (p_what == NOTIFICATION_THEME_CHANGED) {
-		_filter_line_edit->set_right_icon(_filter_line_edit->get_theme_icon(SNAME("Search"), SNAME("EditorIcons")));
+		const VoxelStringNames &sn = VoxelStringNames::get_singleton();
+		_filter_line_edit->set_right_icon(_filter_line_edit->get_theme_icon(sn.Search, sn.EditorIcons));
 
-		const Ref<Font> mono_font = get_theme_font(SNAME("source"), SNAME("EditorFonts"));
+		const Ref<Font> mono_font = get_theme_font(sn.source, sn.EditorFonts);
 		if (mono_font.is_valid()) {
 			_description_label->add_theme_font_override("mono_font", mono_font);
 		}
