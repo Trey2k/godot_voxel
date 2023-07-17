@@ -124,7 +124,7 @@ public:
 	bool get_normalmap_use_gpu() const;
 
 	// These must be called after an edit
-	void post_edit_area(Box3i p_box);
+	void post_edit_area(Box3i p_box, bool update_mesh);
 	void post_edit_modifiers(Box3i p_voxel_box);
 
 	// TODO This still sucks atm cuz the edit will still run on the main thread
@@ -200,8 +200,9 @@ public:
 		DEBUG_DRAW_EDIT_BOXES = 3,
 		DEBUG_DRAW_VOLUME_BOUNDS = 4,
 		DEBUG_DRAW_EDITED_BLOCKS = 5,
+		DEBUG_DRAW_MODIFIER_BOUNDS = 6,
 
-		DEBUG_DRAW_FLAGS_COUNT = 6
+		DEBUG_DRAW_FLAGS_COUNT = 7
 	};
 
 	void debug_set_draw_enabled(bool enabled);

@@ -31,6 +31,8 @@ Semver is not yet in place, so each version can have breaking changes, although 
         - Added helper function to convert an image into a 1-voxel thick "sprite mesh"
     - `VoxelInstanceLibrary`:
         - Added `get_all_item_ids()` to allow iterating over all items of a library
+    - `VoxelLodTerrain`:
+        - Added debug drawing for modifier bounds
     - `VoxelVoxLoader`:
         - Added parameter to allow loading data in a custom channel (instead of the color channel)
     - `VoxelBlockyModel`:
@@ -40,11 +42,15 @@ Semver is not yet in place, so each version can have breaking changes, although 
 
 - Fixes
     - Fixed editor not shrinking properly on narrow screens with a terrain selected. Stats appearing in bottom panel will use a scrollbar if the area is too small.
-    - `VoxelLodTerrain`: fixed error spam when re-generating or destroying the terrain
     - `VoxelGeneratorGraph`:
         - Fixed crash if a graph contains a node with both used and unused outputs, and gets compiled with `debug=false`
         - Fixed error when adding Constant nodes
+        - Fixed graph not always saving when saving the scene
+        - Fixed shader generator crash when a node has an unconnected input
     - `VoxelInstanceLibrary`: fixed `find_item_by_name` was not finding items
+    - `VoxelLodTerrain`: Fixed error spam when re-generating or destroying the terrain
+    - `VoxelToolTerrain`: Fixed terrain was not marked as modified when setting voxel metadata
+    - `VoxelMeshSDF`: fixed saved resource was not loading properly
 
 - Breaking changes
     - `VoxelBlockyLibrary`:

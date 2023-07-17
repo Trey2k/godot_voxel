@@ -40,6 +40,7 @@ private:
 	void _on_graph_editor_regenerate_requested();
 	void _on_graph_editor_popout_requested();
 	void _on_graph_editor_window_close_requested();
+	void _on_generator_changed();
 	void _hide_deferred();
 
 	static void _bind_methods();
