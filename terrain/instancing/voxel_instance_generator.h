@@ -11,10 +11,6 @@
 // would break extensions
 #include "core/variant/callable.h"
 
-
-// would break extensions
-#include "core/variant/callable.h"
-
 #include <limits>
 #include <vector>
 
