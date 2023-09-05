@@ -12,6 +12,9 @@
 #include "core/variant/callable.h"
 
 
+// would break extensions
+#include "core/variant/callable.h"
+
 #include <limits>
 #include <vector>
 
@@ -134,7 +137,6 @@ public:
 #ifdef TOOLS_ENABLED
 	void get_configuration_warnings(PackedStringArray &warnings) const;
 #endif
-
 	inline void set_get_noise2d_override(Callable get_noise2d) {
 		get_noise2d_override = get_noise2d;
 	}
