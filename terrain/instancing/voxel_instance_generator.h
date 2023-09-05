@@ -8,6 +8,10 @@
 #include "../../util/math/vector3i.h"
 #include "../../util/thread/short_lock.h"
 
+// would break extensions
+#include "core/variant/callable.h"
+
+
 #include <limits>
 #include <vector>
 
@@ -131,6 +135,10 @@ public:
 	void get_configuration_warnings(PackedStringArray &warnings) const;
 #endif
 
+	inline void set_get_noise2d_override(Callable get_noise2d) {
+		get_noise2d_override = get_noise2d;
+	}
+
 private:
 	void _on_noise_changed();
 	void _on_noise_graph_changed();
@@ -174,6 +182,8 @@ private:
 	// Used when accessing pointer settings, since this generator can be used in a thread while the editor thread can
 	// modify settings.
 	mutable ShortLock _ptr_settings_lock;
+
+	Callable get_noise2d_override;
 };
 
 } // namespace zylann::voxel
