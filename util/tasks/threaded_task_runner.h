@@ -92,7 +92,7 @@ private:
 		IThreadedTask *task = nullptr;
 		TaskPriority cached_priority;
 		bool is_serial = false;
-		bool postponed = false;
+		uint8_t status = ThreadedTaskContext::STATUS_COMPLETE;
 	};
 
 	struct ThreadData {
@@ -155,6 +155,7 @@ private:
 
 	unsigned int _debug_received_tasks = 0;
 	unsigned int _debug_completed_tasks = 0;
+	unsigned int _debug_taken_out_tasks = 0;
 };
 
 } // namespace zylann

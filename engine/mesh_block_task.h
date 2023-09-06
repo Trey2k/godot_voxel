@@ -6,7 +6,9 @@
 #include "../util/godot/classes/array_mesh.h"
 #include "../util/tasks/threaded_task.h"
 #include "detail_rendering.h"
+#include "generate_block_gpu_task.h"
 #include "ids.h"
+#include "mesh_block_task.h"
 #include "meshing_dependency.h"
 #include "priority_dependency.h"
 
@@ -15,7 +17,7 @@ namespace zylann::voxel {
 class VoxelData;
 
 // Asynchronous task generating a mesh from voxel blocks and their neighbors, in a particular volume
-class MeshBlockTask : public IThreadedTask {
+class MeshBlockTask : public IGeneratingVoxelsThreadedTask {
 public:
 	MeshBlockTask();
 	~MeshBlockTask();
@@ -28,6 +30,8 @@ public:
 	TaskPriority get_priority() override;
 	bool is_cancelled() override;
 	void apply_result() override;
+
+	void set_gpu_results(std::vector<GenerateBlockGPUTaskResult> &&results) override;
 
 	static int debug_get_running_count();
 
@@ -46,6 +50,7 @@ public:
 	bool require_detail_texture = false;
 	uint8_t detail_texture_generator_override_begin_lod_index = 0;
 	bool detail_texture_use_gpu = false;
+	bool block_generation_use_gpu = false;
 	PriorityDependency priority_dependency;
 	std::shared_ptr<MeshingDependency> meshing_dependency;
 	std::shared_ptr<VoxelData> data;
@@ -53,13 +58,20 @@ public:
 	Ref<VoxelGenerator> detail_texture_generator_override;
 
 private:
+	void gather_voxels_gpu(zylann::ThreadedTaskContext &ctx);
+	void gather_voxels_cpu();
+	void build_mesh();
+
 	bool _has_run = false;
 	bool _too_far = false;
 	bool _has_mesh_resource = false;
+	uint8_t _stage = 0;
+	VoxelBufferInternal _voxels;
 	VoxelMesher::Output _surfaces_output;
 	Ref<Mesh> _mesh;
 	std::vector<uint8_t> _mesh_material_indices; // Indexed by mesh surface
 	std::shared_ptr<DetailTextureOutput> _detail_textures;
+	std::vector<GenerateBlockGPUTaskResult> _gpu_generation_results;
 };
 
 Ref<ArrayMesh> build_mesh(Span<const VoxelMesher::Output::Surface> surfaces, Mesh::PrimitiveType primitive, int flags,

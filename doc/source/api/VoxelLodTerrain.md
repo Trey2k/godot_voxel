@@ -35,6 +35,7 @@ Type        | Name                                                              
 `bool`      | [normalmap_use_gpu](#i_normalmap_use_gpu)                                          | false                                                                                 
 `bool`      | [run_stream_in_editor](#i_run_stream_in_editor)                                    | true                                                                                  
 `bool`      | [threaded_update_enabled](#i_threaded_update_enabled)                              | false                                                                                 
+`bool`      | [use_gpu_generation](#i_use_gpu_generation)                                        | false                                                                                 
 `int`       | [view_distance](#i_view_distance)                                                  | 512                                                                                   
 `AABB`      | [voxel_bounds](#i_voxel_bounds)                                                    | AABB(-5.36871e+08, -5.36871e+08, -5.36871e+08, 1.07374e+09, 1.07374e+09, 1.07374e+09) 
 <p></p>
@@ -63,6 +64,7 @@ Return                                                                          
 [int](https://docs.godotengine.org/en/stable/classes/class_int.html)                | [get_process_callback](#i_get_process_callback) ( ) const                                                                                                                                                                                             
 [Dictionary](https://docs.godotengine.org/en/stable/classes/class_dictionary.html)  | [get_statistics](#i_get_statistics) ( ) const                                                                                                                                                                                                         
 [VoxelTool](VoxelTool.md)                                                           | [get_voxel_tool](#i_get_voxel_tool) ( )                                                                                                                                                                                                               
+[bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)              | [is_area_meshed](#i_is_area_meshed) ( [AABB](https://docs.godotengine.org/en/stable/classes/class_aabb.html) area_in_voxels, [int](https://docs.godotengine.org/en/stable/classes/class_int.html) lod_index ) const                                   
 [void](#)                                                                           | [save_modified_blocks](#i_save_modified_blocks) ( )                                                                                                                                                                                                   
 [void](#)                                                                           | [set_normalmap_generator_override](#i_set_normalmap_generator_override) ( [VoxelGenerator](VoxelGenerator.md) generator_override )                                                                                                                    
 [void](#)                                                                           | [set_normalmap_generator_override_begin_lod_index](#i_set_normalmap_generator_override_begin_lod_index) ( [int](https://docs.godotengine.org/en/stable/classes/class_int.html) lod_index )                                                            
@@ -87,7 +89,8 @@ enum **DebugDrawFlag**:
 - **DEBUG_DRAW_EDIT_BOXES** = **3**
 - **DEBUG_DRAW_VOLUME_BOUNDS** = **4**
 - **DEBUG_DRAW_EDITED_BLOCKS** = **5**
-- **DEBUG_DRAW_FLAGS_COUNT** = **6**
+- **DEBUG_DRAW_MODIFIER_BOUNDS** = **6**
+- **DEBUG_DRAW_FLAGS_COUNT** = **7**
 
 
 ## Property Descriptions
@@ -171,6 +174,7 @@ This is the resolution at which normalmaps will begin with, at the LOD level def
 
 - [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_normalmap_use_gpu"></span> **normalmap_use_gpu** = false
 
+Enables GPU detail normalmaps generation, which can speed it up. This is only valid for generators that support it. Vulkan is required.
 
 - [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_run_stream_in_editor"></span> **run_stream_in_editor** = true
 
@@ -179,6 +183,10 @@ Sets wether the member generator and the member stream will run in the editor. T
 - [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_threaded_update_enabled"></span> **threaded_update_enabled** = false
 
 When enabled, this node will run a large part of its update cycle in a separate thread. Otherwise, it will run on the main thread.
+
+- [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_use_gpu_generation"></span> **use_gpu_generation** = false
+
+Enables GPU block generation, which can speed it up. This is only valid for generators that support it. Vulkan is required.
 
 - [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_view_distance"></span> **view_distance** = 512
 
@@ -271,6 +279,14 @@ The returned dictionary has the following structure:
 
 Gets an instance of [VoxelTool](VoxelTool.md) bound to this volume. Allows to query and edit voxels.
 
+- [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_is_area_meshed"></span> **is_area_meshed**( [AABB](https://docs.godotengine.org/en/stable/classes/class_aabb.html) area_in_voxels, [int](https://docs.godotengine.org/en/stable/classes/class_int.html) lod_index ) 
+
+Returns true if the area has been processed by meshing. It does not mean the area actually contains a mesh.
+
+Returns false if the area has not been processed by meshing (therefore it is unknown whethere there should be a mesh here or not).
+
+When streaming terrain, this can be used to determine if an area has fully "loaded", in case the game relies meshes or mesh colliders.
+
 - [void](#)<span id="i_save_modified_blocks"></span> **save_modified_blocks**( ) 
 
 Requests saving of all modified voxels. Saving is asynchronous and will complete some time in the future. If the game quits, the engine will ensure saving tasks get completed before the application shuts down.
@@ -297,4 +313,4 @@ Converts a voxel position into a data block position for a specific LOD index.
 
 Converts a voxel position into a mesh block position for a specific LOD index.
 
-_Generated on Jun 18, 2023_
+_Generated on Sep 03, 2023_

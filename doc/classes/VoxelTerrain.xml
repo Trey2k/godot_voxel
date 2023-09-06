@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="VoxelTerrain" inherits="VoxelNode" version="4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
+<class name="VoxelTerrain" inherits="VoxelNode" version="4.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../doc/class.xsd">
 	<brief_description>
 		Voxel volume using constant level of detail.
 	</brief_description>
@@ -73,6 +73,15 @@
 			<description>
 			</description>
 		</method>
+		<method name="is_area_meshed" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="area_in_voxels" type="AABB" />
+			<description>
+				Returns true if the area has been processed by meshing. It does not mean the area actually contains a mesh.
+				Returns false if the area has not been processed by meshing (therefore it is unknown whethere there should be a mesh here or not).
+				When streaming terrain, this can be used to determine if an area has fully "loaded", in case the game relies meshes or mesh colliders.
+			</description>
+		</method>
 		<method name="save_block">
 			<return type="void" />
 			<param index="0" name="position" type="Vector3i" />
@@ -138,6 +147,9 @@
 		<member name="run_stream_in_editor" type="bool" setter="set_run_stream_in_editor" getter="is_stream_running_in_editor" default="true">
 			Makes the terrain appear in the editor.
 			Important: this option will turn off automatically if you setup a script world generator. Modifying scripts while they are in use by threads causes undefined behaviors. You can still turn on this option if you need a preview, but it is strongly advised to turn it back off and wait until all generation has finished before you edit the script again.
+		</member>
+		<member name="use_gpu_generation" type="bool" setter="set_generator_use_gpu" getter="get_generator_use_gpu" default="false">
+			Enables GPU block generation, which can speed it up. This is only valid for generators that support it. Vulkan is required.
 		</member>
 	</members>
 	<signals>

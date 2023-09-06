@@ -304,10 +304,12 @@ void ThreadedTaskRunner::thread_func(ThreadData &data) {
 			for (size_t i = 0; i < tasks.size(); ++i) {
 				TaskItem &item = tasks[i];
 				if (!item.task->is_cancelled()) {
-					ThreadedTaskContext ctx{ uint8_t(data.index), false };
+					ThreadedTaskContext ctx{ uint8_t(data.index),
+						// By default, if the task does not set this status, it will be considered complete after run
+						ThreadedTaskContext::STATUS_COMPLETE };
 					data.debug_running_task_name = item.task->get_debug_name();
 					item.task->run(ctx);
-					item.postponed = ctx.postpone;
+					item.status = ctx.status;
 					data.debug_running_task_name = nullptr;
 				}
 			}
@@ -325,11 +327,24 @@ void ThreadedTaskRunner::thread_func(ThreadData &data) {
 				MutexLock lock(_completed_tasks_mutex);
 				for (size_t i = 0; i < tasks.size(); ++i) {
 					const TaskItem &item = tasks[i];
-					if (item.postponed) {
-						postponed_tasks.push_back(item);
-					} else {
-						_completed_tasks.push_back(item.task);
-						++_debug_completed_tasks;
+					switch (item.status) {
+						case ThreadedTaskContext::STATUS_COMPLETE:
+							_completed_tasks.push_back(item.task);
+							++_debug_completed_tasks;
+							break;
+
+						case ThreadedTaskContext::STATUS_POSTPONED:
+							postponed_tasks.push_back(item);
+							break;
+
+						case ThreadedTaskContext::STATUS_TAKEN_OUT:
+							// Drop task pointer, its ownership may have been passed to another task
+							++_debug_taken_out_tasks;
+							break;
+
+						default:
+							ZN_PRINT_ERROR("Unknown task status");
+							break;
 					}
 				}
 			}
@@ -420,7 +435,7 @@ const char *ThreadedTaskRunner::get_thread_debug_task_name(unsigned int thread_i
 }
 
 unsigned int ThreadedTaskRunner::get_debug_remaining_tasks() const {
-	return _debug_received_tasks - _debug_completed_tasks;
+	return _debug_received_tasks - _debug_completed_tasks - _debug_taken_out_tasks;
 }
 
 std::vector<IThreadedTask *> &ThreadedTaskRunner::get_completed_tasks_temp_tls() {

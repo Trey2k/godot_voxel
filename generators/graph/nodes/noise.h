@@ -1,10 +1,10 @@
+#include "../../../shaders/fast_noise_lite_shader.h"
 #include "../../../util/godot/classes/fast_noise_lite.h"
 #include "../../../util/noise/fast_noise_lite/fast_noise_lite.h"
 #include "../../../util/noise/fast_noise_lite/fast_noise_lite_range.h"
 #include "../../../util/noise/gd_noise_range.h"
 #include "../../../util/noise/spot_noise.h"
 #include "../../../util/profiling.h"
-#include "../fast_noise_lite_gdshader.h"
 #include "../node_type_db.h"
 
 #ifdef VOXEL_ENABLE_FAST_NOISE_2
@@ -28,9 +28,13 @@ void add_fast_noise_lite_state_config(ShaderGenContext &ctx, const FastNoiseLite
 				   "state.octaves = {};\n"
 				   "state.gain = {};\n"
 				   "state.frequency = {};\n"
-				   "state.lacunarity = {};\n",
+				   "state.lacunarity = {};\n"
+				   "state.cellular_distance_func = {};\n"
+				   "state.cellular_return_type = {};\n"
+				   "state.cellular_jitter_mod = {};\n",
 			fnl.get_seed(), fnl.get_noise_type(), fnl.get_fractal_type(), fnl.get_fractal_octaves(),
-			fnl.get_fractal_gain(), fnl.get_frequency(), fnl.get_fractal_lacunarity());
+			fnl.get_fractal_gain(), fnl.get_frequency(), fnl.get_fractal_lacunarity(),
+			fnl.get_cellular_distance_function(), fnl.get_cellular_return_type(), fnl.get_cellular_jitter());
 }
 
 void add_fast_noise_lite_state_config(ShaderGenContext &ctx, const ZN_FastNoiseLite &fnl) {
@@ -41,9 +45,26 @@ void add_fast_noise_lite_state_config(ShaderGenContext &ctx, const ZN_FastNoiseL
 				   "state.octaves = {};\n"
 				   "state.gain = {};\n"
 				   "state.frequency = {};\n"
-				   "state.lacunarity = {};\n",
+				   "state.lacunarity = {};\n"
+				   "state.cellular_distance_func = {};\n"
+				   "state.cellular_return_type = {};\n"
+				   "state.cellular_jitter_mod = {};\n",
 			fnl.get_seed(), fnl.get_noise_type(), fnl.get_fractal_type(), fnl.get_fractal_octaves(),
-			fnl.get_fractal_gain(), 1.0 / fnl.get_period(), fnl.get_fractal_lacunarity());
+			fnl.get_fractal_gain(), 1.0 / fnl.get_period(), fnl.get_fractal_lacunarity(),
+			fnl.get_cellular_distance_function(), fnl.get_cellular_return_type(), fnl.get_cellular_jitter());
+}
+
+void add_fast_noise_lite_gradient_state_config(ShaderGenContext &ctx, const ZN_FastNoiseLiteGradient &fnl) {
+	ctx.add_format("fnl_state state = fnlCreateState({});\n"
+				   "state.domain_warp_type = {};\n"
+				   "state.domain_warp_amp = {};\n"
+				   "state.fractal_type = {};\n"
+				   "state.octaves = {};\n"
+				   "state.gain = {};\n"
+				   "state.frequency = {};\n"
+				   "state.lacunarity = {};\n",
+			fnl.get_seed(), fnl.get_noise_type(), fnl.get_amplitude(), fnl.get_fractal_type(),
+			fnl.get_fractal_octaves(), fnl.get_fractal_gain(), 1.0 / fnl.get_period(), fnl.get_fractal_lacunarity());
 }
 
 void register_noise_nodes(Span<NodeType> types) {
@@ -107,7 +128,14 @@ void register_noise_nodes(Span<NodeType> types) {
 									   .format(varray(noise->get_class())));
 				return;
 			}
-			ctx.require_lib_code("vg_fnl", zylann::fast_noise_lite::GDSHADER_SOURCE);
+			if (fnl->is_domain_warp_enabled()) {
+				// TODO Support domain warp shader generation with Godot's implementation of FastNoiseLite
+				ctx.make_error(
+						String(ZN_TTR("Shader generation from {0} with domain warp is not supported. Use {1}."))
+								.format(varray(noise->get_class(), ZN_FastNoiseLiteGradient::get_class_static())));
+				return;
+			}
+			ctx.require_lib_code("vg_fnl", g_fast_noise_lite_shader);
 			add_fast_noise_lite_state_config(ctx, **fnl);
 			ctx.add_format("{} = fnlGetNoise2D(state, {}, {});\n", ctx.get_output_name(0), ctx.get_input_name(0),
 					ctx.get_input_name(1));
@@ -174,7 +202,14 @@ void register_noise_nodes(Span<NodeType> types) {
 									   .format(varray(noise->get_class())));
 				return;
 			}
-			ctx.require_lib_code("vg_fnl", zylann::fast_noise_lite::GDSHADER_SOURCE);
+			if (fnl->is_domain_warp_enabled()) {
+				// TODO Support domain warp shader generation with Godot's implementation of FastNoiseLite
+				ctx.make_error(
+						String(ZN_TTR("Shader generation from {0} with domain warp is not supported. Use {1}."))
+								.format(varray(noise->get_class(), ZN_FastNoiseLiteGradient::get_class_static())));
+				return;
+			}
+			ctx.require_lib_code("vg_fnl", g_fast_noise_lite_shader);
 			add_fast_noise_lite_state_config(ctx, **fnl);
 			// TODO Add missing options
 			ctx.add_format("{} = fnlGetNoise3D(state, {}, {}, {});\n", ctx.get_output_name(0), ctx.get_input_name(0),
@@ -233,7 +268,7 @@ void register_noise_nodes(Span<NodeType> types) {
 						String(ZN_TTR("{0} instance is null")).format(varray(ZN_FastNoiseLite::get_class_static())));
 				return;
 			}
-			ctx.require_lib_code("vg_fnl", zylann::fast_noise_lite::GDSHADER_SOURCE);
+			ctx.require_lib_code("vg_fnl", g_fast_noise_lite_shader);
 			add_fast_noise_lite_state_config(ctx, **noise);
 			ctx.add_format("{} = fnlGetNoise2D(state, {}, {});\n", ctx.get_output_name(0), ctx.get_input_name(0),
 					ctx.get_input_name(1));
@@ -294,7 +329,7 @@ void register_noise_nodes(Span<NodeType> types) {
 						String(ZN_TTR("{0} instance is null")).format(varray(ZN_FastNoiseLite::get_class_static())));
 				return;
 			}
-			ctx.require_lib_code("vg_fnl", zylann::fast_noise_lite::GDSHADER_SOURCE);
+			ctx.require_lib_code("vg_fnl", g_fast_noise_lite_shader);
 			add_fast_noise_lite_state_config(ctx, **noise);
 			ctx.add_format("{} = fnlGetNoise3D(state, {}, {}, {});\n", ctx.get_output_name(0), ctx.get_input_name(0),
 					ctx.get_input_name(1), ctx.get_input_name(2));
@@ -351,6 +386,23 @@ void register_noise_nodes(Span<NodeType> types) {
 			const math::Interval2 r = get_fnl_gradient_range_2d(*p.noise, x, y);
 			ctx.set_output(0, r.x);
 			ctx.set_output(1, r.y);
+		};
+
+		t.shader_gen_func = [](ShaderGenContext &ctx) {
+			Ref<ZN_FastNoiseLiteGradient> noise = ctx.get_param(0);
+			if (noise.is_null()) {
+				ctx.make_error(String(ZN_TTR("{0} instance is null"))
+									   .format(varray(ZN_FastNoiseLiteGradient::get_class_static())));
+				return;
+			}
+			ctx.require_lib_code("vg_fnl", g_fast_noise_lite_shader);
+			add_fast_noise_lite_gradient_state_config(ctx, **noise);
+			ctx.add_format("float wx = {};\n"
+						   "float wy = {};\n"
+						   "fnlDomainWarp2D(state, wx, wy);\n"
+						   "{} = wx;\n"
+						   "{} = wy;\n",
+					ctx.get_input_name(0), ctx.get_input_name(1), ctx.get_output_name(0), ctx.get_output_name(1));
 		};
 	}
 	{
@@ -412,6 +464,26 @@ void register_noise_nodes(Span<NodeType> types) {
 			ctx.set_output(0, r.x);
 			ctx.set_output(1, r.y);
 			ctx.set_output(2, r.z);
+		};
+
+		t.shader_gen_func = [](ShaderGenContext &ctx) {
+			Ref<ZN_FastNoiseLiteGradient> noise = ctx.get_param(0);
+			if (noise.is_null()) {
+				ctx.make_error(String(ZN_TTR("{0} instance is null"))
+									   .format(varray(ZN_FastNoiseLiteGradient::get_class_static())));
+				return;
+			}
+			ctx.require_lib_code("vg_fnl", g_fast_noise_lite_shader);
+			add_fast_noise_lite_gradient_state_config(ctx, **noise);
+			ctx.add_format("float wx = {};\n"
+						   "float wy = {};\n"
+						   "float wz = {};\n"
+						   "fnlDomainWarp3D(state, wx, wy, wz);\n"
+						   "{} = wx;\n"
+						   "{} = wy;\n"
+						   "{} = wz;\n",
+					ctx.get_input_name(0), ctx.get_input_name(1), ctx.get_input_name(2), ctx.get_output_name(0),
+					ctx.get_output_name(1), ctx.get_output_name(2));
 		};
 	}
 #ifdef VOXEL_ENABLE_FAST_NOISE_2

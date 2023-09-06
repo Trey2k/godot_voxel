@@ -1,9 +1,9 @@
 #include "compute_shader.h"
-#include "../util/godot/classes/rd_shader_source.h"
-#include "../util/godot/core/array.h" // for `varray` in GDExtension builds
-#include "../util/godot/core/print_string.h"
-#include "../util/profiling.h"
-#include "voxel_engine.h"
+#include "../../util/godot/classes/rd_shader_source.h"
+#include "../../util/godot/core/array.h" // for `varray` in GDExtension builds
+#include "../../util/godot/core/print_string.h"
+#include "../../util/profiling.h"
+#include "../voxel_engine.h"
 
 namespace zylann::voxel {
 
@@ -48,6 +48,13 @@ String format_source_code_with_line_numbers(String src) {
 void ComputeShader::load_from_glsl(String source_text, String name) {
 	ZN_PROFILE_SCOPE();
 	clear();
+
+	// For debugging
+	// {
+	// 	Ref<FileAccess> f = FileAccess::open("debug_" + name + ".txt", FileAccess::WRITE);
+	// 	ZN_ASSERT(f.is_valid());
+	// 	f->store_string(source_text);
+	// }
 
 	Ref<RDShaderSource> shader_source;
 	shader_source.instantiate();

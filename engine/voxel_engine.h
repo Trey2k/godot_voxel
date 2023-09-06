@@ -9,10 +9,10 @@
 #include "../util/tasks/progressive_task_runner.h"
 #include "../util/tasks/threaded_task_runner.h"
 #include "../util/tasks/time_spread_task_runner.h"
-#include "compute_shader.h"
 #include "detail_rendering.h"
-#include "gpu_storage_buffer_pool.h"
-#include "gpu_task_runner.h"
+#include "gpu/compute_shader.h"
+#include "gpu/gpu_storage_buffer_pool.h"
+#include "gpu/gpu_task_runner.h"
 #include "ids.h"
 #include "priority_dependency.h"
 
@@ -69,8 +69,7 @@ public:
 		std::shared_ptr<VoxelBufferInternal> voxels;
 		UniquePtr<InstanceBlockData> instances;
 		Vector3i position;
-		// TODO Rename lod_index
-		uint8_t lod;
+		uint8_t lod_index;
 		bool dropped;
 		bool max_lod_hint;
 		// Blocks with this flag set should not be ignored.
@@ -240,6 +239,14 @@ public:
 		return _detail_modifier_mesh_shader;
 	}
 
+	const ComputeShader &get_block_modifier_sphere_shader() const {
+		return _block_modifier_sphere_shader;
+	}
+
+	const ComputeShader &get_block_modifier_mesh_shader() const {
+		return _block_modifier_mesh_shader;
+	}
+
 	RID get_filtering_sampler() const {
 		return _filtering_sampler_rid;
 	}
@@ -304,6 +311,8 @@ private:
 	ComputeShader _detail_normalmap_shader;
 	ComputeShader _detail_modifier_sphere_shader;
 	ComputeShader _detail_modifier_mesh_shader;
+	ComputeShader _block_modifier_sphere_shader;
+	ComputeShader _block_modifier_mesh_shader;
 };
 
 struct VoxelFileLockerRead {

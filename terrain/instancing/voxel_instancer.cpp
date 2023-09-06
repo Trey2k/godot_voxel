@@ -201,7 +201,7 @@ void VoxelInstancer::process() {
 		process_mesh_lods();
 	}
 #ifdef TOOLS_ENABLED
-	if (_gizmos_enabled) {
+	if (_gizmos_enabled && is_visible_in_tree()) {
 		process_gizmos();
 	}
 #endif
@@ -665,6 +665,7 @@ void VoxelInstancer::update_layer_meshes(int layer_id) {
 		if (block.layer_id != layer_id || !block.multimesh_instance.is_valid()) {
 			continue;
 		}
+		block.multimesh_instance.set_render_layer(settings.render_layer);
 		block.multimesh_instance.set_material_override(settings.material_override);
 		block.multimesh_instance.set_cast_shadows_setting(settings.shadow_casting_setting);
 		Ref<MultiMesh> multimesh = block.multimesh_instance.get_multimesh();
@@ -1038,6 +1039,7 @@ void VoxelInstancer::update_block_from_transforms(int block_index, Span<const Tr
 				block.multimesh_instance.set_visible(is_visible());
 			}
 			block.multimesh_instance.set_multimesh(multimesh);
+			block.multimesh_instance.set_render_layer(settings.render_layer);
 			block.multimesh_instance.set_world(&world);
 			block.multimesh_instance.set_transform(block_global_transform);
 			block.multimesh_instance.set_material_override(settings.material_override);
@@ -1908,10 +1910,13 @@ void VoxelInstancer::get_configuration_warnings(PackedStringArray &warnings) con
 								.format(varray(VoxelInstanceLibrary::get_class_static())));
 	} else if (_library->get_item_count() == 0) {
 		warnings.append(ZN_TTR("The assigned library is empty. Add items to it so they can be spawned."));
+
+	} else {
+		get_resource_configuration_warnings(**_library, warnings, []() { return "library: "; });
 	}
 }
 
-#endif
+#endif // TOOLS_ENABLED
 
 void VoxelInstancer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_library", "library"), &VoxelInstancer::set_library);

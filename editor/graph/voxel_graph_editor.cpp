@@ -831,9 +831,9 @@ void VoxelGraphEditor::set_preview_transform(Vector2f offset, float scale) {
 
 Vector2 get_graph_offset_from_mouse(const GraphEdit *graph_edit, const Vector2 local_mouse_pos) {
 	// TODO Ask for a method, or at least documentation about how it's done
-	Vector2 offset = graph_edit->get_scroll_ofs() + local_mouse_pos;
-	if (graph_edit->is_using_snap()) {
-		const int snap = graph_edit->get_snap();
+	Vector2 offset = get_graph_edit_scroll_offset(*graph_edit) + local_mouse_pos;
+	if (is_graph_edit_using_snapping(*graph_edit)) {
+		const int snap = get_graph_edit_snapping_distance(*graph_edit);
 		offset = offset.snapped(Vector2(snap, snap));
 	}
 	offset /= EDSCALE;
@@ -901,9 +901,7 @@ void reset_modulates(GraphEdit &graph_edit) {
 }
 
 void VoxelGraphEditor::update_previews(bool with_live_update) {
-	if (_generator.is_null()) {
-		return;
-	}
+	ZN_ASSERT_RETURN(_graph.is_valid());
 
 	clear_range_analysis_tooltips();
 	hide_profiling_ratios();
@@ -913,9 +911,11 @@ void VoxelGraphEditor::update_previews(bool with_live_update) {
 
 	const uint64_t time_before = Time::get_singleton()->get_ticks_usec();
 
-	const pg::CompilationResult result = _generator->compile(true);
+	// VoxelGeneratorGraph has extra requirements to compile
+	const pg::CompilationResult result = _generator.is_valid() ? _generator->compile(true) : _graph->compile(true);
+
 	if (!result.success) {
-		ERR_PRINT(String("Voxel graph compilation failed: {0}").format(varray(result.message)));
+		ERR_PRINT(String("Graph compilation failed: {0}").format(varray(result.message)));
 
 		_compile_result_label->set_text(result.message);
 		_compile_result_label->set_tooltip_text(result.message);
@@ -938,10 +938,13 @@ void VoxelGraphEditor::update_previews(bool with_live_update) {
 		_compile_result_label->hide();
 	}
 
-	if (!_generator->is_good()) {
+	if (_generator.is_null() || !_generator->is_good()) {
 		return;
 	}
 	// We assume no other thread will try to modify the graph and compile something not good
+
+	// TODO Make slice previews work with arbitrary functions, when possible
+	// TODO Make range analysis previews work with arbitrary functions, when possible
 
 	update_slice_previews();
 
@@ -953,6 +956,9 @@ void VoxelGraphEditor::update_previews(bool with_live_update) {
 	ZN_PRINT_VERBOSE(format("Previews generated in {} us", time_taken));
 
 	if (_live_update_enabled && with_live_update) {
+		// TODO Use that hash to prevent full recompiling, because the `changed` now reports ANY changes, including
+		// those that don't require recompiling...
+
 		// Check if the graph changed in a way that actually changes the output,
 		// because re-generating all voxels is expensive.
 		// Note, sub-resouces can be involved, not just node connections and properties.

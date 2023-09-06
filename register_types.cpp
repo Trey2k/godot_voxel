@@ -350,10 +350,6 @@ void initialize_voxel_module(ModuleInitializationLevel p_level) {
 		VoxelGraphEditorNodePreview::load_resources();
 
 #if defined(ZN_GODOT_EXTENSION)
-		// TODO GDX: Can't add plugins.
-		// See https://github.com/godotengine/godot-cpp/issues/640
-		// and https://github.com/godotengine/godot/pull/65592
-
 		// TODO GDX: I don't want to expose any of the following classes, but it looks like there is no way to make them
 		// functional as extensions BUT not expose them
 
@@ -363,7 +359,7 @@ void initialize_voxel_module(ModuleInitializationLevel p_level) {
 		ClassDB::register_class<ZN_EditorProperty>();
 		ClassDB::register_class<ZN_Axes3DControl>();
 		ClassDB::register_class<ZN_ModelViewer>();
-		ClassDB::register_class<EditorPropertyAABBMinMax>();
+		ClassDB::register_class<ZN_EditorPropertyAABBMinMax>();
 
 		ClassDB::register_class<ZN_FastNoiseLiteEditorPlugin>();
 		ClassDB::register_class<ZN_FastNoiseLiteEditorInspectorPlugin>();
@@ -462,8 +458,8 @@ void uninitialize_voxel_module(ModuleInitializationLevel p_level) {
 
 		// At this point, the GDScript module has nullified GDScriptLanguage::singleton!!
 		// That means it's impossible to free scripts still referenced by VoxelEngine. And that can happen, because
-		// users can write custom generators, which run inside threads, and these threads are hosted in the server...
-		// See https://github.com/Zylann/godot_voxel/issues/189
+		// users can write custom generators, which run inside threads, and these threads are hosted in the engine
+		// singleton... See https://github.com/Zylann/godot_voxel/issues/189
 
 		VoxelMesherTransvoxel::free_static_resources();
 		VoxelStringNames::destroy_singleton();
