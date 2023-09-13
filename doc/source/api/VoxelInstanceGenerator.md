@@ -2,7 +2,6 @@
 
 Inherits: [Resource](https://docs.godotengine.org/en/stable/classes/class_resource.html)
 
-
 Decides where to spawn instances on top of a voxel surface.
 
 ## Description: 
@@ -73,7 +72,7 @@ In which way instances are primarily emitted.
 
 Instances will not be created above this height.
 
-This also depends on the chosen member VoxelInstancer.up_mode.
+This also depends on the chosen [VoxelInstancer.up_mode](VoxelInstancer.md#i_up_mode).
 
 - [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_max_scale"></span> **max_scale** = 1.0
 
@@ -83,11 +82,11 @@ Minimum scale instances will be randomized with.
 
 Instances will not spawn if the ground has a slope higher than this angle.
 
-This also depends on the chosen member VoxelInstancer.up_mode.
+This also depends on the chosen [VoxelInstancer.up_mode](VoxelInstancer.md#i_up_mode).
 
 - [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_min_height"></span> **min_height** = 1.17549e-38
 
-Instances will not be created below this height. This also depends on the chosen member VoxelInstancer.up_mode.
+Instances will not be created below this height. This also depends on the chosen [VoxelInstancer.up_mode](VoxelInstancer.md#i_up_mode).
 
 - [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_min_scale"></span> **min_scale** = 1.0
 
@@ -97,7 +96,7 @@ Maximum scale instances will be randomized with.
 
 Instances will not spawn if the ground has a slope lower than this angle.
 
-This also depends on the chosen member VoxelInstancer.up_mode.
+This also depends on the chosen [VoxelInstancer.up_mode](VoxelInstancer.md#i_up_mode).
 
 - [Noise](https://docs.godotengine.org/en/stable/classes/class_noise.html)<span id="i_noise"></span> **noise**
 
@@ -105,23 +104,23 @@ Noise used to filter out spawned instances, so that they may spawn in patterns d
 
 - [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_noise_dimension"></span> **noise_dimension** = 1
 
-Which dimension should be used when evaluating member noise and member noise_graph.
+Which dimension should be used when evaluating [VoxelInstanceGenerator.noise](VoxelInstanceGenerator.md#i_noise) and [VoxelInstanceGenerator.noise_graph](VoxelInstanceGenerator.md#i_noise_graph).
 
 - [VoxelGraphFunction](VoxelGraphFunction.md)<span id="i_noise_graph"></span> **noise_graph**
 
-Graph function used to filter out spawned instances, similar to member noise, but allows more custom noise computations.
+Graph function used to filter out spawned instances, similar to [VoxelInstanceGenerator.noise](VoxelInstanceGenerator.md#i_noise), but allows more custom noise computations.
 
-The graph must have 2 inputs (X and Z) if member noise_dimension is 2D, and 3 inputs (X, Y and Z) if 3D. There must be one SDF output.
+The graph must have 2 inputs (X and Z) if [VoxelInstanceGenerator.noise_dimension](VoxelInstanceGenerator.md#i_noise_dimension) is 2D, and 3 inputs (X, Y and Z) if 3D. There must be one SDF output.
 
 - [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_noise_on_scale"></span> **noise_on_scale** = 0.0
 
-How much member noise also affects the scale of instances.
+How much [VoxelInstanceGenerator.noise](VoxelInstanceGenerator.md#i_noise) also affects the scale of instances.
 
 - [float](https://docs.godotengine.org/en/stable/classes/class_float.html)<span id="i_offset_along_normal"></span> **offset_along_normal** = 0.0
 
 Offsets spawned instances along the normal of the ground.
 
-The normal depends on member VoxelInstancer.up_mode and is also affected by member vertical_alignment.
+The normal depends on [VoxelInstancer.up_mode](VoxelInstancer.md#i_up_mode) and is also affected by [VoxelInstanceGenerator.vertical_alignment](VoxelInstanceGenerator.md#i_vertical_alignment).
 
 - [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_random_rotation"></span> **random_rotation** = true
 
@@ -143,6 +142,6 @@ If 0, they will completely align with the ground.
 
 If 1, they will completely align with whichever direction is considered "up".
 
-This depends on member VoxelInstancer.up_mode.
+This depends on [VoxelInstancer.up_mode](VoxelInstancer.md#i_up_mode).
 
-_Generated on Sep 03, 2023_
+_Generated on Sep 12, 2023_

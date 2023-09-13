@@ -2,7 +2,6 @@
 
 Inherits: [Resource](https://docs.godotengine.org/en/stable/classes/class_resource.html)
 
-
 Settings for a model that can be used by [VoxelInstancer](VoxelInstancer.md)
 
 ## Properties: 
@@ -30,4 +29,4 @@ Type                      | Name                         | Default
 - [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_persistent"></span> **persistent** = false
 
 
-_Generated on Sep 03, 2023_
+_Generated on Sep 12, 2023_

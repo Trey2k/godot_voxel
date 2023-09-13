@@ -1079,6 +1079,8 @@ void VoxelInstancer::update_block_from_transforms(int block_index, Span<const Tr
 					body->set_instance_index(instance_index);
 					body->set_render_block_index(block_index);
 					body->set_data_block_position(math::floor_to_int(body_transform.origin) >> data_block_size_po2);
+					body->set_collision_layer(settings.collision_layer);
+					body->set_collision_mask(settings.collision_mask);
 
 					for (unsigned int i = 0; i < collision_shapes.size(); ++i) {
 						const VoxelInstanceLibraryMultiMeshItem::CollisionShapeInfo &shape_info = collision_shapes[i];
@@ -1086,6 +1088,10 @@ void VoxelInstancer::update_block_from_transforms(int block_index, Span<const Tr
 						cs->set_shape(shape_info.shape);
 						cs->set_transform(shape_info.transform);
 						body->add_child(cs);
+					}
+
+					for (const StringName &group_name : settings.group_names) {
+						body->add_to_group(group_name);
 					}
 
 					add_child(body);

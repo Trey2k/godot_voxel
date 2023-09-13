@@ -258,6 +258,14 @@ bool VoxelData::try_set_voxel_f(real_t value, Vector3i pos, unsigned int channel
 
 void VoxelData::copy(Vector3i min_pos, VoxelBufferInternal &dst_buffer, unsigned int channels_mask) const {
 	ZN_PROFILE_SCOPE();
+
+#ifdef DEBUG_ENABLED
+	if (channels_mask == 0) {
+		ZN_PRINT_WARNING("copy was called with empty channel mask, nothing will be copied");
+		return;
+	}
+#endif
+
 	const Lod &data_lod0 = _lods[0];
 	const VoxelModifierStack &modifiers = _modifiers;
 
@@ -861,7 +869,7 @@ void VoxelData::view_area(Box3i blocks_box, std::vector<Vector3i> &missing_block
 }
 
 void VoxelData::unview_area(Box3i blocks_box, std::vector<Vector3i> &missing_blocks,
-		std::vector<Vector3i> &found_blocks, std::vector<BlockToSave> *to_save) {
+		std::vector<Vector3i> &removed_blocks, std::vector<BlockToSave> *to_save) {
 	ZN_PROFILE_SCOPE();
 	const Box3i bounds_in_blocks = get_bounds().downscaled(get_block_size());
 	blocks_box = blocks_box.clipped(bounds_in_blocks);
@@ -869,7 +877,7 @@ void VoxelData::unview_area(Box3i blocks_box, std::vector<Vector3i> &missing_blo
 	Lod &lod = _lods[0];
 	RWLockRead rlock(lod.map_lock);
 
-	blocks_box.for_each_cell_zxy([&lod, &missing_blocks, &found_blocks, to_save](Vector3i bpos) {
+	blocks_box.for_each_cell_zxy([&lod, &missing_blocks, &removed_blocks, to_save](Vector3i bpos) {
 		VoxelDataBlock *block = lod.map.get_block(bpos);
 		if (block != nullptr) {
 			block->viewers.remove();
@@ -879,8 +887,8 @@ void VoxelData::unview_area(Box3i blocks_box, std::vector<Vector3i> &missing_blo
 				} else {
 					lod.map.remove_block(bpos, BeforeUnloadSaveAction{ to_save, bpos, 0 });
 				}
+				removed_blocks.push_back(bpos);
 			}
-			found_blocks.push_back(bpos);
 		} else {
 			missing_blocks.push_back(bpos);
 		}

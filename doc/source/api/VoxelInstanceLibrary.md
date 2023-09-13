@@ -2,7 +2,6 @@
 
 Inherits: [Resource](https://docs.godotengine.org/en/stable/classes/class_resource.html)
 
-
 Contains a list of models that can be used by [VoxelInstancer](VoxelInstancer.md), associated with a unique ID.
 
 ## Methods: 
@@ -42,4 +41,4 @@ Return                                                                          
 - [void](#)<span id="i_remove_item"></span> **remove_item**( [int](https://docs.godotengine.org/en/stable/classes/class_int.html) id ) 
 
 
-_Generated on Sep 03, 2023_
+_Generated on Sep 12, 2023_

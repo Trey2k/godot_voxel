@@ -2,7 +2,6 @@
 
 Inherits: [Resource](https://docs.godotengine.org/en/stable/classes/class_resource.html)
 
-
 Model stored in [VoxelBlockyLibrary](VoxelBlockyLibrary.md) and used by [VoxelMesherBlocky](VoxelMesherBlocky.md).
 
 ## Description: 
@@ -65,7 +64,7 @@ Color of the model. It will be used to modulate its color when built into a voxe
 
 - [bool](https://docs.godotengine.org/en/stable/classes/class_bool.html)<span id="i_random_tickable"></span> **random_tickable** = false
 
-If enabled, voxels having this ID in the TYPE channel will be used by method VoxelToolTerrain.run_blocky_random_tick.
+If enabled, voxels having this ID in the TYPE channel will be used by [VoxelToolTerrain.run_blocky_random_tick](VoxelToolTerrain.md#i_run_blocky_random_tick).
 
 - [int](https://docs.godotengine.org/en/stable/classes/class_int.html)<span id="i_transparency_index"></span> **transparency_index** = 0
 
@@ -77,7 +76,7 @@ Equal indices culls the face, different indexes doesn't.
 
 Tells if the model is transparent in the context of sides being culled by neighbor voxels.
 
-This is a legacy property, member transparency_index may be used instead.
+This is a legacy property, [VoxelBlockyModel.transparency_index](VoxelBlockyModel.md#i_transparency_index) may be used instead.
 
 ## Method Descriptions
 
@@ -100,4 +99,4 @@ Sets a material override for a specific surface of the model. It allows to use t
 
 Enables or disables mesh-based collision on a specific surface. It allows a model to have solid parts and others where players can pass through.
 
-_Generated on Sep 03, 2023_
+_Generated on Sep 12, 2023_
